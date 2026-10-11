@@ -55,7 +55,11 @@ def main() -> None:
     if args.live:
         if not settings.gemini_api_key:
             raise SystemExit("--live needs GEMINI_API_KEY")
-        llm = GeminiClient(settings.gemini_api_key, settings.gemini_model, settings.llm_timeout_s)
+        llm = GeminiClient(
+            settings.gemini_api_key, settings.gemini_model, settings.llm_timeout_s,
+            settings.llm_max_output_tokens, settings.gemini_thinking_level,
+            settings.gemini_thinking_budget,
+        )
     else:
         llm = StubLLM()
 

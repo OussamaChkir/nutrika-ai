@@ -56,3 +56,9 @@ def test_api_key_is_enforced_when_configured(client):
     assert client.post("/v1/explain", json=payload(), headers={"X-API-Key": "nope"}).status_code == 401
     ok = client.post("/v1/explain", json=payload(), headers={"X-API-Key": "secret"})
     assert ok.status_code == 200
+
+
+def test_blank_service_api_key_disables_auth(client):
+    # `SERVICE_API_KEY=` left blank in .env is parsed as "", which must mean "no auth".
+    app.dependency_overrides[get_settings] = lambda: Settings(service_api_key="", _env_file=None)
+    assert client.post("/v1/explain", json=payload()).status_code == 200

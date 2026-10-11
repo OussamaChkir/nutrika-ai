@@ -18,10 +18,19 @@ _llm_cache: dict[tuple, LLMClient] = {}
 def get_llm(settings: Settings = Depends(get_settings)) -> LLMClient:
     if not settings.gemini_api_key:
         return NullLLM()
-    key = (settings.gemini_api_key, settings.gemini_model, settings.llm_timeout_s)
+    key = (
+        settings.gemini_api_key, settings.gemini_model, settings.llm_timeout_s,
+        settings.llm_max_output_tokens, settings.gemini_thinking_level,
+        settings.gemini_thinking_budget,
+    )
     if key not in _llm_cache:
         _llm_cache[key] = GeminiClient(
-            settings.gemini_api_key, settings.gemini_model, settings.llm_timeout_s
+            settings.gemini_api_key,
+            settings.gemini_model,
+            settings.llm_timeout_s,
+            settings.llm_max_output_tokens,
+            settings.gemini_thinking_level,
+            settings.gemini_thinking_budget,
         )
     return _llm_cache[key]
 
@@ -30,8 +39,8 @@ def require_api_key(
     x_api_key: str | None = Header(default=None),
     settings: Settings = Depends(get_settings),
 ) -> None:
-    if settings.service_api_key is None:
-        return  # auth disabled (local dev)
+    if not settings.service_api_key:
+        return  # auth disabled (local dev); a blank .env line counts as unset
     if x_api_key is None or not secrets.compare_digest(x_api_key, settings.service_api_key):
         raise HTTPException(status_code=401, detail="invalid or missing API key")
 
